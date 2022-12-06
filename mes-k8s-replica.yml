@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mes-db
+  labels:
+    app: mes
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: mes
+      tier: db
+  template:
+    metadata:
+      labels:
+        app: mes
+        tier: db
+    spec:
+      containers:
+        - image: postgres-custom:latest
+          imagePullPolicy: IfNotPresent
+          name: db
+          env:
+            - name: POSTGRES_PASSWORD
+              value: "1234"
+          ports:
+            - containerPort: 5432
+              name: db
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: mes
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: mes
+    tier: db
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mes-app
+  labels:
+    app: mes
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: mes
+      tier: app
+  template:
+    metadata:
+      labels:
+        app: mes
+        tier: app
+    spec:
+      containers:
+        - image: mes-app:latest
+          imagePullPolicy: IfNotPresent
+          name: app
+          ports:
+            - containerPort: 8080
+              name: app
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mes-app
+  labels:
+    app: mes
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+  selector:
+    app: mes
+    tier: app
